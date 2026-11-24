@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Change preview in `edit`/`write` prompts.** Before you confirm a change,
+  the prompt shows a unified diff of the file (`---`/`+++` headers, `@@`
+  hunks, `-`/`+` lines) with `+added -removed` counts. A new file diffs
+  against `/dev/null`, a `write` over an existing file diffs old against
+  new, and an `edit` shows its replacements. Long diffs are collapsed to 20
+  lines; `e`, ctrl+o or a click expands them. Hosts without the interactive
+  TUI get the collapsed diff in the select title. YOLO shows no preview
+  because it never prompts. See
+  [docs/permissions.md](docs/permissions.md#change-preview).
+
 ### Changed
 - **Shortcuts moved to F6 and F7.** Cycling the permission mode is now `F6`
   (was `alt+m`) and toggling network filtering is `F7` (was `alt+n`), so the

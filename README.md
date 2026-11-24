@@ -90,7 +90,7 @@ retuned, and you can add your own ([docs/modes.md](docs/modes.md)).
 
 | Mode | Behavior |
 |------|----------|
-| **Default** | Confirm every `bash`/`edit`/`write`; reads are free. Approved **in-project** `bash` runs **sandboxed** (writes confined to the project). |
+| **Default** | Confirm every `bash`/`edit`/`write`; reads are free. The `edit`/`write` prompt previews the change as a unified diff. Approved **in-project** `bash` runs **sandboxed** (writes confined to the project). |
 | **Plan Mode** | Reads are free; in-project `bash` runs **sandboxed read-only**, so only read commands work. The one mutation allowed without confirmation is creating or editing **Markdown** inside the project. A system-prompt addition steers the model to write a plan to `plan/<date>_<description>.md`, render it with the **`show_plan`** tool, and hand over: an **Accept / Decline** prompt follows the plan ([approving a plan](docs/modes.md#approving-a-plan)). |
 | **Build** | Reads, writes, and `bash` **inside the project** run with no confirmation; in-project `bash` runs **sandboxed**. |
 | **YOLO** | Never prompts, never sandboxes, no protected-path backstop. Can do anything the current user can. |

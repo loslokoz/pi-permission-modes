@@ -29,6 +29,8 @@
  *   bash-parse.ts   tree-sitter command extraction + heuristic fallback
  *   config-load.ts  layered permission-mode.json loader
  *   approvals.ts    session-scoped "Allow for session" store
+ *   diff-preview.ts unified-diff previews for edit/write prompts
+ *   approval-dialog.ts  the collapsible preview dialog (TUI)
  *   awareness.ts    sandbox-boundary system-prompt section (injected each turn)
  *   network.ts      live network session state (grants, denies, open toggle)
  *   paths.ts        out-of-project / protected-path predicates
@@ -57,7 +59,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { docRef, docsDir, docsPromptBlock, piReferencePaths } from "./docs.ts";
 import { withGitHubTokenHelper } from "./git-auth.ts";
-import { askWithSession, BlockedPaths, deniedByUser, type DenyOption, SessionApprovals } from "./approvals.ts";
+import { askWithSession, type ApprovalDialogFactory, BlockedPaths, deniedByUser, type DenyOption, SessionApprovals } from "./approvals.ts";
+import { type FileChangePreview, fileChangePreview } from "./diff-preview.ts";
 import { localBindingNote, sandboxAwarenessPrompt } from "./awareness.ts";
 import { PROFILE_GRANT_QUESTION, profileExclusions, profileGrantText } from "./sandbox-win.ts";
 import { type PromptParts, writePromptSections } from "./prompt-sections.ts";
@@ -117,6 +120,12 @@ import {
 } from "./schema.ts";
 import { createShowPlanTool } from "./show-plan.ts";
 import { updateStatus } from "./status.ts";
+
+/** pi's `ctx.ui.custom` with the `blocked` status option newer hosts accept (older ones ignore it). */
+type CustomDialogHost = (
+  factory: ApprovalDialogFactory,
+  options?: { blocked?: { kind: "permission"; message: string } },
+) => Promise<string | undefined>;
 
 /** Built-in file tools whose `input.path` is gated against the matching surface. */
 const FILE_TOOL_SURFACE: Record<string, Surface> = {
@@ -316,7 +325,8 @@ export default async function (pi: ExtensionAPI) {
 
   /** Prompt to allow an `ask`, honoring session grants (a target list requires
    * every entry to be granted; granting remembers all). Returns true to allow.
-   * When `onForever` is given, a fourth "Allow forever" option persists the rule. */
+   * When `onForever` is given, a fourth "Allow forever" option persists the rule.
+   * `preview` adds a unified-diff preview of an edit/write to the prompt. */
   const promptAllow = (
     ctx: ExtensionContext,
     surface: Surface,
@@ -324,9 +334,22 @@ export default async function (pi: ExtensionAPI) {
     title: string,
     onForever?: () => void | Promise<void>,
     denyAnd?: DenyOption,
+    preview?: FileChangePreview,
   ): Promise<boolean> =>
     askWithSession(
-      { hasUI: ctx.hasUI, select: (t, o) => ctx.ui.select(t, o) },
+      {
+        hasUI: ctx.hasUI,
+        select: (t, o) => ctx.ui.select(t, o),
+        // The collapsible diff dialog needs the interactive TUI; RPC and the
+        // non-interactive modes fall back to the select title.
+        custom:
+          ctx.mode === "tui" && typeof ctx.ui.custom === "function"
+            ? (factory) =>
+                (ctx.ui.custom as unknown as CustomDialogHost)(factory, {
+                  blocked: { kind: "permission", message: title },
+                })
+            : undefined,
+      },
       approvals,
       modeName,
       surface,
@@ -334,6 +357,7 @@ export default async function (pi: ExtensionAPI) {
       title,
       onForever,
       denyAnd,
+      preview,
     );
 
   /**
@@ -1593,31 +1617,43 @@ export default async function (pi: ExtensionAPI) {
     // File tools (read/edit/write/ls/grep/find).
     const surface = FILE_TOOL_SURFACE[toolName];
     if (surface && inPath !== undefined) {
-      const path = inPath;
+      const target = inPath;
       // A path blocked for the session ("Deny and block") is denied outright:
       // the file tools are not sandboxed, so the kernel mask alone would not cover them.
-      if (blocked.covers(canonicalPath(root, path))) {
-        return { block: true, reason: `Path "${path}" is blocked for this session (Deny and block); /perm unblock lifts it; see ${docRef("denyAndBlock")}` };
+      if (blocked.covers(canonicalPath(root, target))) {
+        return { block: true, reason: `Path "${target}" is blocked for this session (Deny and block); /perm unblock lifts it; see ${docRef("denyAndBlock")}` };
       }
-      const outside = isOutside(root, path, surface === "edit" || surface === "write" ? bounds : docBounds);
-      const decision = decideDetailed(m, surface, path, { isOutside: outside });
+      const outside = isOutside(root, target, surface === "edit" || surface === "write" ? bounds : docBounds);
+      const decision = decideDetailed(m, surface, target, { isOutside: outside });
       if (decision.action === "deny") {
         // Friendly message for the Plan-mode "Markdown only" case (read-only mode).
         // It wins over a per-rule reason: in a read-only mode the mode constraint
         // is the pertinent explanation, and a pattern reason must not hide it.
         if ((surface === "edit" || surface === "write") && !m.sandbox.writable) {
-          if (ctx.hasUI) ctx.ui.notify(`${m.label} allows editing Markdown files only: ${path}`, "warning");
+          if (ctx.hasUI) ctx.ui.notify(`${m.label} allows editing Markdown files only: ${target}`, "warning");
           return { block: true, reason: `${m.label} allows editing Markdown files only` };
         }
         // Otherwise a per-rule reason wins: it tells the model what to do instead.
         if (decision.reason) return { block: true, reason: decision.reason };
-        return { block: true, reason: `Path "${path}" is blocked by ${m.label} (see ${docRef("blockedByPolicy")})` };
+        return { block: true, reason: `Path "${target}" is blocked by ${m.label} (see ${docRef("blockedByPolicy")})` };
       }
       if (decision.action === "ask") {
-        const title = outside ? `Outside project - allow ${toolName}? (${path})` : `Allow ${toolName}? (${path})`;
-        const reason = decision.reason ?? deniedByUser(outside ? `${toolName} of "${path}" outside the project` : `${toolName} of "${path}"`);
-        const denyAnd = outside ? denyAndBlock(ctx, [path]) : undefined;
-        if (!(await promptAllow(ctx, surface, path, title, undefined, denyAnd))) return { block: true, reason };
+        const title = outside ? `Outside project - allow ${toolName}? (${target})` : `Allow ${toolName}? (${target})`;
+        const reason = decision.reason ?? deniedByUser(outside ? `${toolName} of "${target}" outside the project` : `${toolName} of "${target}"`);
+        const denyAnd = outside ? denyAndBlock(ctx, [target]) : undefined;
+        // Show what edit/write is about to do. The preview reads the file from
+        // the project root (the target the model wrote may be relative) and is
+        // skipped in modes that trust everything (YOLO): nothing is reviewed there.
+        const preview =
+          (toolName === "edit" || toolName === "write") && !m.bypassProtectedPaths
+            ? fileChangePreview({
+                toolName,
+                input,
+                path: target,
+                filePath: path.resolve(root, target),
+              })
+            : undefined;
+        if (!(await promptAllow(ctx, surface, target, title, undefined, denyAnd, preview))) return { block: true, reason };
       }
       return undefined; // allow
     }

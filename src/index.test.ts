@@ -476,6 +476,56 @@ test("default mode: reads free, writes prompt, protected paths hard-block", { sk
   }
 });
 
+test("default mode: edit and write prompts carry a unified diff; YOLO prompts nothing", { skip }, async () => {
+  const h = await setup();
+  try {
+    // A write of a new file: the diff is a create (old side /dev/null).
+    h.ctx.answers.push("Allow once");
+    assert.equal(await h.call("write", { path: "notes.txt", content: "hello\nworld\n" }), undefined);
+    const create = h.ctx.prompts[0].title;
+    assert.match(create, /^Allow write\? \(notes\.txt\)\n/);
+    assert.match(create, /new file notes\.txt {2}\+2 -0/);
+    assert.match(create, /^--- \/dev\/null$/m);
+    assert.match(create, /^\+hello$/m);
+
+    // A write over an existing file diffs the old content against the new.
+    // The harness only emits tool_call (it never runs the tool), so put the
+    // first write's result on disk for the next preview to read.
+    writeFileSync(path.join(h.root, "notes.txt"), "hello\nworld\n");
+    h.ctx.answers.push("Allow once");
+    assert.equal(await h.call("write", { path: "notes.txt", content: "hello\nworld\nagain\n" }), undefined);
+    const overwrite = h.ctx.prompts[1].title;
+    assert.match(overwrite, /overwrite notes\.txt {2}\+1 -0/);
+    assert.match(overwrite, /^\+again$/m);
+
+    // An edit shows its replacement; the preview reads the file from the project root.
+    h.ctx.answers.push("Allow once");
+    assert.equal(await h.call("edit", { path: "notes.txt", edits: [{ oldText: "hello", newText: "HELLO" }] }), undefined);
+    const edit = h.ctx.prompts[2].title;
+    assert.match(edit, /edit notes\.txt {2}\+1 -1/);
+    assert.match(edit, /^-hello$/m);
+    assert.match(edit, /^\+HELLO$/m);
+    assert.equal(h.ctx.prompts.length, 3);
+
+    // The edit that was allowed never ran (the harness only emits tool_call), so
+    // the file still holds the content written above — the preview is the only view.
+    assert.equal(readFileSync(path.join(h.root, "notes.txt"), "utf8"), "hello\nworld\n");
+  } finally {
+    h.cleanup();
+  }
+});
+
+test("yolo: edit and write never prompt, so no diff preview is built", { skip }, async () => {
+  const h = await setup({ permFlag: "yolo" });
+  try {
+    assert.equal(await h.call("write", { path: "notes.txt", content: "x\n" }), undefined);
+    assert.equal(await h.call("edit", { path: "notes.txt", edits: [{ oldText: "x", newText: "y" }] }), undefined);
+    assert.equal(h.ctx.prompts.length, 0);
+  } finally {
+    h.cleanup();
+  }
+});
+
 test("sandbox-writable temp dirs are in-bounds: no 'outside project' prompt, no unsandboxed escape", { skip }, async () => {
   const h = await setup();
   try {

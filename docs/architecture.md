@@ -19,6 +19,7 @@ shape of the code.
 | `src/config-load.ts` | Layered `permission-mode.json` loader: stock, global (full authority), project (tighten-only); `profileToConfig`; "Allow forever" persistence |
 | `src/config-audit.ts` | Outdated-default detection against `defaults-history.json`, the once-per-upgrade notice |
 | `src/approvals.ts` | Session-scoped "Allow for session" store and the prompt |
+| `src/diff-preview.ts`, `src/approval-dialog.ts` | Pure unified-diff previews for `edit`/`write` prompts, and the collapsible TUI dialog that shows them |
 | `src/sandbox.ts` | `SandboxController`: runtime lifecycle, per-mode profile, per-command wrap, violation reporting, placeholder cleanup |
 | `src/network.ts` | Session network state: grants, denies, the open toggle, the live host prompt |
 | `src/awareness.ts` | The `## Sandbox & permissions` system-prompt section (pure) |
@@ -78,9 +79,10 @@ shape of the code.
   is ignored from a project.
 - **Pure, SDK-free decision logic.** `resolve`, `config-load`, `paths`,
   `bash-enforce`, `heuristics`, `approvals`, `awareness`, `docs`,
-  `plan-render`, `util` import the SDK as types only, so `node --test` runs
-  them without pi. `index.ts` is the only place that talks to pi's runtime
-  API; `sandbox.ts` is the only place that talks to the runtime.
+  `diff-preview`, `approval-dialog`, `plan-render`, `util` import the SDK as
+  types only, so `node --test` runs them without pi. `index.ts` is the only
+  place that talks to pi's runtime API; `sandbox.ts` is the only place that
+  talks to the runtime.
 - **The session scratch directory is always writable and in-bounds**, even
   when a config drops `/tmp/pi`; the awareness text must stay truthful.
 - **Hints carry documentation references.** Every message that explains a

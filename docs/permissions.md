@@ -107,12 +107,35 @@ surface, the `path` gate, and the project boundary, then:
   `<mode> allows editing Markdown files only`;
 - `ask` prompts: `Allow read? (<p>)`, or `Outside project - allow read?
   (<p>)` for a path beyond the boundary, which also offers "Deny and
-  block";
+  block"; for `edit` and `write` the prompt also previews the change as a
+  unified diff (see [Change preview](#change-preview));
 - a path blocked for the session is refused without a prompt.
 
 Paths are normalized the way pi's own tools open them (`~` expansion, a
 leading `@` stripped, `file://` URLs), so the guard judges the same file pi
 opens. Symlinks are followed.
+
+## Change preview
+
+An `edit` or `write` prompt shows what the call is about to do before you
+confirm it: a unified diff (`--- a/<path>`, `+++ b/<path>`, `@@` hunks, and
+`-`/`+` lines) with the `+added -removed` counts. A new file diffs against
+`/dev/null`; a `write` over an existing file diffs the old content against
+the new one; an `edit` shows its replacements, marked `approximate match`
+when its `oldText` was not found verbatim (pi's own matcher may still find
+it fuzzily, so the preview can then differ from the result).
+
+A long diff is collapsed to its first 20 lines. `e`, ctrl+o (the app's
+"expand tools" binding) or a click on the preview toggles the rest: up to 200
+lines, and never more than the terminal has room for. The header keeps the
+full counts either way. Hosts without the
+interactive TUI (RPC, print) get the collapsed diff in the select title
+instead. Files over 1 MB, and diffs over 2000 lines, are not previewed in
+full.
+
+YOLO shows no preview, and neither does any mode that sets
+`bypassProtectedPaths`: such a mode never prompts for `edit` or `write`, so
+there is nothing to review.
 
 ## Protected paths
 

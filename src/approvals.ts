@@ -12,6 +12,10 @@
  */
 
 import path from "node:path";
+import type { Theme } from "@earendil-works/pi-coding-agent";
+import type { Component, KeybindingsManager, TUI } from "@earendil-works/pi-tui";
+import { createApprovalDialog, loadTui } from "./approval-dialog.ts";
+import { type FileChangePreview, previewText } from "./diff-preview.ts";
 import type { Surface } from "./schema.ts";
 
 export class SessionApprovals {
@@ -85,10 +89,27 @@ export interface DenyOption {
   run: () => void | Promise<void>;
 }
 
+/**
+ * A custom-dialog factory, as pi's `ctx.ui.custom()` takes it. The approval
+ * dialog (`approval-dialog.ts`) is built from it when the host offers one.
+ */
+export type ApprovalDialogFactory = (
+  tui: TUI,
+  theme: Theme,
+  keybindings: KeybindingsManager,
+  done: (choice: string | undefined) => void,
+) => Component | Promise<Component>;
+
 /** Minimal UI surface needed by `askWithSession` (a subset of ctx.ui + hasUI). */
 export interface ApprovalUI {
   hasUI: boolean;
   select(title: string, options: string[]): Promise<string | undefined>;
+  /**
+   * Optional TUI host for a custom dialog (pi's `ctx.ui.custom`). Only set in
+   * interactive mode; without it the prompt falls back to `select` with the
+   * collapsed diff in the title.
+   */
+  custom?: (factory: ApprovalDialogFactory) => Promise<string | undefined>;
 }
 
 const ALLOW_ONCE = "Allow once";
@@ -110,6 +131,10 @@ const DENY = "Deny";
  * When `onForever` is provided, a fourth "Allow forever" option appears; choosing
  * it records the session grant AND invokes `onForever` (which persists the rule
  * to the user's config). Used for first-seen extension tools / skills.
+ *
+ * `preview` (an edit/write change preview) is shown inside the prompt: as a
+ * collapsible custom dialog when the host has `custom`, else as collapsed text
+ * under the title.
  */
 /**
  * The reason a tool call reports after the user picked Deny. It names the
@@ -129,6 +154,7 @@ export async function askWithSession(
   title: string,
   onForever?: () => void | Promise<void>,
   denyAnd?: DenyOption,
+  preview?: FileChangePreview,
 ): Promise<boolean> {
   if (!ui.hasUI) return false; // no way to confirm → deny
   const targets = Array.isArray(target) ? target : [target];
@@ -137,7 +163,16 @@ export async function askWithSession(
 
   const options = onForever ? [ALLOW_ONCE, ALLOW_SESSION, ALLOW_FOREVER, DENY] : [ALLOW_ONCE, ALLOW_SESSION, DENY];
   if (denyAnd) options.push(denyAnd.label); // "Deny and block … for this session"
-  const choice = await ui.select(title, options);
+
+  // A change preview is reviewed in a custom dialog when the host has one
+  // (interactive mode); elsewhere the collapsed diff rides along in the title.
+  const lib = preview && ui.custom ? await loadTui() : undefined;
+  const choice =
+    preview && lib && ui.custom
+      ? await ui.custom((tui, theme, keybindings, done) =>
+          createApprovalDialog(lib, tui, theme, keybindings, { title, options, preview, done }),
+        )
+      : await ui.select(preview ? `${title}\n${previewText(preview)}` : title, options);
   if (denyAnd && choice === denyAnd.label) {
     await denyAnd.run();
     return false;
