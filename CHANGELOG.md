@@ -6,6 +6,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Shortcuts moved to F6 and F7.** Cycling the permission mode is now `F6`
+  (was `alt+m`) and toggling network filtering is `F7` (was `alt+n`), so the
+  bindings no longer collide with readline-style `alt` word motions in the
+  prompt editor. The status chip, the notifications and the docs name the new
+  keys.
+
 ## [2.7.2]
 
 ### Changed

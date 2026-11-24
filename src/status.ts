@@ -9,12 +9,12 @@ import { networkFiltered, type SandboxController } from "./sandbox.ts";
 /**
  * Render the `perm` status chip:
  *
- *   Build (sandboxed in project dir, alt+m)  Network: filtered (alt+n)
- *   YOLO (alt+m)  Network: open
+ *   Build (sandboxed in project dir, F6)  Network: filtered (F7)
+ *   YOLO (F6)  Network: open
  *
  * The shortcut hints are always shown — toggling is the least discoverable
  * part of the extension. The network state is color-coded: green while the
- * domain allowlist filters bash traffic, orange when it's open (via alt+n /
+ * domain allowlist filters bash traffic, orange when it's open (via F7 /
  * `/net open`, or because nothing sandboxes in this mode). A degraded sandbox
  * additionally shows a `(!)` warning.
  */
@@ -40,11 +40,11 @@ export function updateStatus(
   if (busy) status += " " + t.fg("warning", `(sandbox: ${busy})`);
   else if (enforcing && sandbox.pendingProfile) status += " " + t.fg("warning", `(sandbox profile pending: ${shellsRunning} shell(s))`);
   else if (enforcing && sandbox.switching) status += " " + t.fg("warning", "(applying sandbox profile...)");
-  else status += " " + t.fg("dim", enforcing ? "(sandboxed in project dir, alt+m)" : "(alt+m)");
+  else status += " " + t.fg("dim", enforcing ? "(sandboxed in project dir, F6)" : "(F6)");
   if (!busy && mode.sandbox.enabled && sandbox.warn && !sandbox.disabled) status += " " + t.fg("error", `(!) ${sandbox.warn}`);
   if (enforcing && networkFiltered(mode.sandbox)) {
     status +=
-      "  " + (networkOpen ? t.fg("warning", "Network: open (alt+n)") : t.fg("success", "Network: filtered (alt+n)"));
+      "  " + (networkOpen ? t.fg("warning", "Network: open (F7)") : t.fg("success", "Network: filtered (F7)"));
   } else if (enforcing) {
     status += "  " + t.fg("dim", "Network: unrestricted"); // no allowlist configured: the runtime does not filter
   } else {

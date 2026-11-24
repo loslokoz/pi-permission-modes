@@ -61,7 +61,7 @@ user action in the UI.
 
 ## Session grants and the open toggle
 
-- `alt+n` or `/net open` / `/net restrict` toggles filtering for the session:
+- `F7` or `/net open` / `/net restrict` toggles filtering for the session:
   `Network: filtered` (green) or `Network: open` (orange) in the footer. Open
   means every host is reachable except `deniedDomains`.
 - `/net status` shows the allowlist, the session grants, and the session

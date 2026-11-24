@@ -7,9 +7,9 @@ can be retuned or replaced in the global config
 
 ## Stock modes
 
-Cycle with `alt+m` (in `cycleOrder`) or switch with `/perm <mode>`. The
+Cycle with `F6` (in `cycleOrder`) or switch with `/perm <mode>`. The
 footer shows the mode, the network state, and their shortcuts, for example
-`Build (sandboxed in project dir, alt+m)  Network: filtered (alt+n)`.
+`Build (sandboxed in project dir, F6)  Network: filtered (F7)`.
 
 | Mode | Bash | File tools | Other |
 |---|---|---|---|
@@ -118,7 +118,7 @@ Plan ready: plan/2026-09-24_feature.md
   approving is refused until the model shows it again.
 - **Decline** (or Esc) costs nothing. The plan stays pending and is not
   offered again until the next `show_plan`.
-- Switching into the approve mode by hand (`alt+m`, `/perm build`) while a
+- Switching into the approve mode by hand (`F6`, `/perm build`) while a
   plan is pending asks `Implement plan/... now?`; No leaves you in Build
   with nothing sent.
 - `/plan approve` switches and sends without asking; `/plan status` names

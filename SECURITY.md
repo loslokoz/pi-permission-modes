@@ -89,7 +89,7 @@ you can rely on it appropriately. The reference for every setting is in
   domain permits exfiltration to it. Keep the allowlist tight. Hosts outside
   the allowlist trigger a **live permission prompt** (deny-by-default: headless
   sessions, dismissed prompts, and `askOnBlockedHost:false` all deny). Session
-  grants, `/net allow`, `/net open`/`alt+n`, and the model's
+  grants, `/net allow`, `/net open`/`F7`, and the model's
   `request_network_access` tool widen the reachable set **only through an
   explicit user action in the UI** - the model cannot grant itself access, but
   everything you allow is exfiltration surface. The runtime refuses an allowed

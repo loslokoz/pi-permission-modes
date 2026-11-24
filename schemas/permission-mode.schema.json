@@ -21,7 +21,7 @@
     },
     "cycleOrder": {
       "type": "array",
-      "description": "Order modes are cycled with alt+m; also the display order.",
+      "description": "Order modes are cycled with F6; also the display order.",
       "items": { "type": "string" }
     },
     "modes": {

@@ -219,7 +219,7 @@ export const SHELLS_DEFAULTS: Required<ShellsConfig> = { enabled: true, maxConcu
 export interface PermissionModeConfig {
   $schema?: string;
   defaultMode: string;
-  /** alt+m cycle order; also the display order. */
+  /** F6 cycle order; also the display order. */
   cycleOrder: string[];
   modes: Record<string, ModeDef>;
   /** One-step plan approval settings (plan-approval.ts). Global config only. */
@@ -259,7 +259,7 @@ export function planModeSystemPrompt(today: string): string {
     "   displays it.",
     "4. After show_plan, do NOT summarize, recap, or describe the plan, and add no other",
     "   commentary. Your entire reply must be a single short line: ask the user to review",
-    "   the plan and accept it in the prompt that follows (or press `alt+m` / run `/plan approve`).",
+    "   the plan and accept it in the prompt that follows (or press `F6` / run `/plan approve`).",
     "",
     "For quick questions that aren't planning tasks, just answer normally.",
   ].join("\n");

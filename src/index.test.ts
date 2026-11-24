@@ -451,7 +451,7 @@ test("default mode: reads free, writes prompt, protected paths hard-block", { sk
   const h = await setup();
   try {
     // Footer: mode label + shortcut hints + network state (open here: --no-sandbox).
-    assert.match(h.ctx.status, /^Default \(alt\+m\)  Network: open$/);
+    assert.match(h.ctx.status, /^Default \(F6\)  Network: open$/);
 
     // Reads pass silently.
     assert.equal(await h.call("read", { path: "src/app.ts" }), undefined);
@@ -1084,13 +1084,13 @@ test("/perm: a bare call cycles, an unknown argument prints usage without switch
   }
 });
 
-test("alt+m cycles modes and persists the choice as a session entry", { skip }, async () => {
+test("F6 cycles modes and persists the choice as a session entry", { skip }, async () => {
   const h = await setup();
   try {
-    await h.pi.shortcuts.get("alt+m")!(h.ctx);
+    await h.pi.shortcuts.get("f6")!(h.ctx);
     assert.match(h.ctx.status, /^Plan Mode /); // default → plan (cycleOrder)
     assert.deepEqual(h.pi.entries.at(-1), { customType: "perm-mode", data: { mode: "plan" } });
-    await h.pi.shortcuts.get("alt+m")!(h.ctx);
+    await h.pi.shortcuts.get("f6")!(h.ctx);
     assert.match(h.ctx.status, /^Build /);
   } finally {
     h.cleanup();
@@ -1412,7 +1412,7 @@ test("multi-line bash commands: policy applies across newlines (no silent allow,
   }
 });
 
-test("network: /net allow + status, request tool degrades gracefully, alt+n informs", { skip }, async () => {
+test("network: /net allow + status, request tool degrades gracefully, F7 informs", { skip }, async () => {
   const h = await setup();
   try {
     // Degraded (--no-sandbox): nothing filters — the tool says so instead of prompting.
@@ -1433,8 +1433,8 @@ test("network: /net allow + status, request tool degrades gracefully, alt+n info
     await h.pi.commands.get("net")!("allow *", h.ctx);
     assert.match(h.ctx.notices.at(-1) ?? "", /usage: \/net allow/);
 
-    // alt+n with nothing enforcing explains itself instead of silently toggling.
-    await h.pi.shortcuts.get("alt+n")!(h.ctx);
+    // F7 with nothing enforcing explains itself instead of silently toggling.
+    await h.pi.shortcuts.get("f7")!(h.ctx);
     assert.match(h.ctx.notices.at(-1) ?? "", /not filtered in this mode\/state/);
 
     // /net reset clears the grants.

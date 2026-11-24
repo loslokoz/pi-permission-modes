@@ -1,7 +1,7 @@
 /**
  * Permission Mode extension
  *
- * Switchable, data-driven permission modes (cycle with alt+m or /perm). A MODE
+ * Switchable, data-driven permission modes (cycle with F6 or /perm). A MODE
  * is a JSON bundle of a sandbox profile + an allow/ask/deny permission policy +
  * UI metadata, defined in `schema.ts` (built-in defaults) and overridable in
  * `permission-mode.json`. The four shipped modes:
@@ -153,7 +153,7 @@ export default async function (pi: ExtensionAPI) {
   // True when the current mode was auto-picked as the headless-child safety
   // fallback (no --perm flag, session entry, or forwarded env). The mode's
   // POLICY fully applies, but its systemPrompt is not injected — a planning
-  // prompt steering a headless worker to write plan files and ask about alt+m
+  // prompt steering a headless worker to write plan files and ask about F6
   // would misdirect it — and the fallback isn't exported to child processes
   // as if it were an explicit choice (children re-derive their own fallback).
   let fallbackMode = false;
@@ -511,7 +511,7 @@ export default async function (pi: ExtensionAPI) {
       if (modeName === name) updateStatus(ctx, currentMode(), sandbox, net.open, { shellsRunning: shellsRunning() });
     });
     if (persist) pi.appendEntry<PermState>("perm-mode", { mode: modeName });
-    // B: a manual switch into the approve mode while a plan is pending (alt+m,
+    // B: a manual switch into the approve mode while a plan is pending (F6,
     // /perm <mode>). Not on session_start/resume (persist=false) and not for
     // the switch approvePlan itself performs.
     if (persist && pendingPlan && !approvingPlan && ctx.hasUI && name !== previous && name === approveModeName()) {
@@ -566,7 +566,7 @@ export default async function (pi: ExtensionAPI) {
     // agent_end fires while the run still counts as streaming (it settles
     // after its listeners), and a plain send throws then. A follow-up is
     // queued behind the finishing run and pi starts a fresh run for it; when
-    // the agent is idle (B via alt+m, /plan approve) it is sent right away.
+    // the agent is idle (B via F6, /plan approve) it is sent right away.
     pi.sendUserMessage(approvalMessage(config.plan?.approveMessage, plan.path), { deliverAs: "followUp" });
     return true;
   };
@@ -651,7 +651,7 @@ export default async function (pi: ExtensionAPI) {
     return { name: resolved ?? modeName, fallback: false };
   };
 
-  pi.registerShortcut("alt+m", {
+  pi.registerShortcut("f6", {
     description: `Cycle permission mode (${config.cycleOrder.join(" -> ")})`,
     handler: async (ctx) => cycle(ctx),
   });
@@ -724,13 +724,13 @@ export default async function (pi: ExtensionAPI) {
     updateStatus(ctx, currentMode(), sandbox, net.open, { shellsRunning: shellsRunning() });
     ctx.ui.notify(
       net.open
-        ? "Network: OPEN for this session — domain filtering disabled (alt+n or /net restrict to re-enable)"
+        ? "Network: OPEN for this session — domain filtering disabled (F7 or /net restrict to re-enable)"
         : "Network: filtered — domain allowlist active",
       net.open ? "warning" : "info",
     );
   };
 
-  pi.registerShortcut("alt+n", {
+  pi.registerShortcut("f7", {
     description: "Toggle network filtering for this session (filtered <-> open)",
     handler: toggleNetwork,
   });
@@ -791,8 +791,8 @@ export default async function (pi: ExtensionAPI) {
       const state = !networkEnforcing()
         ? "OPEN — nothing filters in this mode/state"
         : net.open
-          ? "OPEN for this session (/net restrict or alt+n to re-enable filtering)"
-          : "filtered (alt+n or /net open to disable)";
+          ? "OPEN for this session (/net restrict or F7 to re-enable filtering)"
+          : "filtered (F7 or /net open to disable)";
       return ctx.ui.notify(
         [
           `Network (${m.label}): ${state}`,
@@ -908,7 +908,7 @@ export default async function (pi: ExtensionAPI) {
               ]
             : []),
           ...(networkFiltered(m.sandbox)
-            ? [`Network: ${net.open ? "OPEN for this session (alt+n)" : "filtered (alt+n)"}`, `Network allowed: ${c.network?.allowedDomains?.join(", ") || "(none)"}`]
+            ? [`Network: ${net.open ? "OPEN for this session (F7)" : "filtered (F7)"}`, `Network allowed: ${c.network?.allowedDomains?.join(", ") || "(none)"}`]
             : ["Network: unrestricted in this mode (no allowlist configured)"]),
           `Session grants: ${net.grants().join(", ") || "(none)"}`,
           ...(sandbox.lastSwitch ? [`Last profile switch: ${sandbox.lastSwitch === "hot" ? "in place (updateConfig; running commands kept their sandbox)" : "runtime restart (reset + initialize)"}`] : []),

@@ -60,7 +60,7 @@ export interface AwarenessOptions {
   active: boolean;
   /** Why it isn't, when a sandboxed mode runs degraded (warn text / --no-sandbox). */
   reason?: string;
-  /** `/net open` / alt+n: domain filtering suspended for this session. */
+  /** `/net open` / F7: domain filtering suspended for this session. */
   networkOpen?: boolean;
   /** Session-granted domains (via prompts, /net allow, request_network_access). */
   sessionDomains?: string[];

@@ -40,7 +40,7 @@ sudo apt install -y bubblewrap socat ripgrep
 ## Verify
 
 1. Start pi in any project - the footer shows a mode indicator, e.g. `Default`.
-2. Switch to Build (`alt+m` until `Build`, or `/perm build`):
+2. Switch to Build (`F6` until `Build`, or `/perm build`):
    - sandbox active -> `Build (sandboxed in project dir)`;
    - otherwise -> `Build (!) sandbox-runtime missing ...` plus a fix-it notification.
 3. `/sandbox` prints the active sandbox configuration (or why it's unavailable).
@@ -106,12 +106,12 @@ in-project `bash` **prompts** instead - you are never silently unprotected.
 ### At a glance
 
 The current mode is persisted per session and shown in the footer, next to
-the network state: `Build (sandboxed in project dir, alt+m)  Network: filtered (alt+n)`.
+the network state: `Build (sandboxed in project dir, F6)  Network: filtered (F7)`.
 
 | Command | What it does |
 |---|---|
-| `alt+m`, `/perm <mode>` | Cycle or switch the mode |
-| `alt+n`, `/net ...` | Toggle network filtering; allowlist, grants, denies |
+| `F6`, `/perm <mode>` | Cycle or switch the mode |
+| `F7`, `/net ...` | Toggle network filtering; allowlist, grants, denies |
 | `/perm init` | Write a full copy of the stock defaults to the global config |
 | `/perm clear-approvals`, `/perm blocks`, `/perm unblock <path>` | Session grants and "Deny and block" paths |
 | `/plan approve`, `/plan status` | Plan approval |

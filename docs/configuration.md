@@ -34,7 +34,7 @@ last fallback).
 | `$comment` | string | Free-form note. `/perm init` records the copy's provenance here |
 | `acknowledgeDefaults` | string | Extension version whose defaults you reviewed this file against; silences outdated-default warnings until the shipped defaults change again. Global only |
 | `defaultMode` | string | The mode a fresh session starts in (see [modes.md, Start mode](modes.md#start-mode)). Global only |
-| `cycleOrder` | string[] | The `alt+m` cycle order and the display order. Global only |
+| `cycleOrder` | string[] | The `F6` cycle order and the display order. Global only |
 | `modes` | object | Mode name to mode definition ([modes.md, Mode fields](modes.md#mode-fields)) |
 | `plan` | object | Plan approval: `approveMode` (default `build`) and `approveMessage` (`{path}` is replaced by the plan path). Global only ([modes.md, Approving a plan](modes.md#approving-a-plan)) |
 | `shells` | object | Background shells: `enabled` (default true), `maxConcurrent` (default 4), `notify` (`wake`, `note`, `none`; default `wake`). A project may only tighten ([shells.md](shells.md#configuration)) |

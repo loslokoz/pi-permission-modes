@@ -24,8 +24,8 @@ model and known limitations), [CHANGELOG.md](../CHANGELOG.md),
 
 | Command | What it does |
 |---|---|
-| `alt+m` | Cycle the permission mode (`cycleOrder`) |
-| `alt+n` | Toggle network filtering for the session (`Network: filtered` / `open`) |
+| `F6` | Cycle the permission mode (`cycleOrder`) |
+| `F7` | Toggle network filtering for the session (`Network: filtered` / `open`) |
 | `/perm <mode>` | Switch to a mode by name |
 | `/perm init` | Write a full copy of the stock defaults to the global config path |
 | `/perm clear-approvals` | Forget this session's "Allow for session" grants and blocks |
